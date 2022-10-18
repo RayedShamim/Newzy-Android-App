@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.newzy.HomeFragment"
+        android:label="home_fragment"
+        tools:layout="@layout/home_fragment" >
+        <action
+            android:id="@+id/action_homeFragment_to_filterFragment"
+            app:destination="@id/filterFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_webpageDisplay"
+            app:destination="@id/webpageDisplay" />
+    </fragment>
+    <fragment
+        android:id="@+id/filterFragment"
+        android:name="com.example.newzy.FilterFragment"
+        android:label="filter_fragment"
+        tools:layout="@layout/filter_fragment" />
+    <fragment
+        android:id="@+id/webpageDisplay"
+        android:name="com.example.newzy.WebpageDisplay"
+        android:label="webpage_display"
+        tools:layout="@layout/webpage_display" >
+        <argument
+            android:name="url"
+            app:argType="string" />
+    </fragment>
+</navigation>
