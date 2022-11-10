@@ -1,11 +1,13 @@
 package com.example.newzy
 
+import android.app.Fragment
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
@@ -192,7 +194,7 @@ class FilterFragment: Fragment() {
 
         spinnerCountry.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-                if (oldCountry != null){
+                if (oldCountry != null) {
                     val newCountry = CountryNewzy(
                         id = oldCountry.id,
                         name = CountriesList.country[p2].name,
