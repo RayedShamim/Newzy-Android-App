@@ -14,7 +14,7 @@ class NewzyAdapter(val onItemClicked: (Articles) -> Unit): ListAdapter<Articles,
     class NewzyViewHolder(val binding: NewsListItemBinding): RecyclerView.ViewHolder(binding.root) {
         fun bind(articles: Articles) {
             binding.title.text = articles.title
-            binding.description.text = articles.description
+            binding.description.text = articles.description ?: "No Description"
 
             val thumbnail = binding.imageView
             val imageUrl = articles.urlToImage

@@ -1,25 +1,23 @@
 package com.example.newzy
 
-import android.app.Fragment
-import android.icu.text.SimpleDateFormat
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SearchView
-import androidx.annotation.RequiresApi
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.newzy.database.FilterData
 import com.example.newzy.databinding.HomeFragmentBinding
+import com.google.android.material.shape.ShapeAppearanceModel
+import java.text.SimpleDateFormat
 import java.util.*
 
-class HomeFragment: Fragment() {
+class HomeFragment: Fragment(){
 
     val viewModel: NewzyViewModel by activityViewModels {
         NewzyViewModelFactory(
@@ -29,6 +27,9 @@ class HomeFragment: Fragment() {
 
     private var _binding: HomeFragmentBinding? = null
     private val binding get() = _binding!!
+
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var filterData: FilterData
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,23 +43,49 @@ class HomeFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.appToolBar.apply {
+            setLogo(R.drawable.newzy_logo_full_2_01)
+        }
+
+        recyclerView = binding.recyclerviewNews
+        val newsAdapter = NewzyAdapter {
+            val action = it.url?.let { it1 ->
+                HomeFragmentDirections.actionHomeFragmentToWebpageDisplay(
+                    it1
+                )
+            }
+            if (action != null) {
+                this.findNavController().navigate(action)
+            }
+        }
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+
+        val card = binding.bottomNavCard
+        val cardHeight = card.height * 1.4
+        val displayHeight = resources.displayMetrics.heightPixels
+        card.animate().y(displayHeight.toFloat() + cardHeight.toFloat())
+                    .setDuration(0)
+                    .start()
+
+        viewModel.allArticles.observe(this.viewLifecycleOwner) { articles ->
+            articles.let {
+                newsAdapter.submitList(it)
+            }
+        }
+        recyclerView.adapter = newsAdapter
+
         viewModel.retrieveFilterData.observe(this.viewLifecycleOwner) {
             val data = it
             if(data == null) {
                 viewModel.insertFilterData()
             } else {
-                run(it)
+                filterData = it
+                run()
             }
         }
     }
 
-//    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-//
-//    }
-
-
-
-    fun run(filterData: FilterData) {
+    private fun run() {
 
         val card = binding.bottomNavCard
         val cardHeight = card.height * 1.4
@@ -71,6 +98,7 @@ class HomeFragment: Fragment() {
         searchView.setOnQueryTextFocusChangeListener { _ , hasFocus ->
             if (hasFocus) {
                 // searchView expanded
+                viewModel.page = 1
                 card.animate().y(displayHeight.toFloat() - cardHeight.toFloat())
                     .setDuration(0)
                     .start()
@@ -82,22 +110,29 @@ class HomeFragment: Fragment() {
             }
         }
 
-
+        searchView.queryHint = "Search News"
 
         searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
-            @RequiresApi(Build.VERSION_CODES.N)
             override fun onQueryTextSubmit(query: String?): Boolean {
                 Log.v("new", "$query")
                 var fromValue: String? = null
                 if (filterData.from != null) {
-                    fromValue = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(filterData.from)
+                    fromValue = SimpleDateFormat("yyyy-MM-dd",
+                        Locale.getDefault()).format(filterData.from)
                 }
                 val toValue: String? = null
                 if (filterData.to != null) {
-                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(filterData.to)
+                    SimpleDateFormat("yyyy-MM-dd",
+                        Locale.getDefault()).format(filterData.to)
                 }
                 if (query != null) {
-                    viewModel.getSearch(query,filterData.sliderCount,viewModel.page,fromValue,toValue,filterData.sortBy,filterData.language)
+                    viewModel.getSearch(query,
+                        filterData.sliderCount,
+                        viewModel.page,
+                        fromValue,
+                        toValue,
+                        filterData.sortBy,
+                        filterData.language)
                 }
                 pageNavigator(filterData,viewModel.page,query,fromValue,toValue)
                 unCheckAll()
@@ -122,24 +157,26 @@ class HomeFragment: Fragment() {
             binding.topHeadline.isChecked = true
         }
 
-        binding.topHeadline.chipCornerRadius = 20F
+        binding.topHeadline.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(20F)
         binding.topHeadline.setOnCheckedChangeListener { _, b ->
             val chip = binding.topHeadline
             if (b) {
+                recyclerView.smoothScrollToPosition(0)
                 viewModel.getTopHeadlines( "")
-                chip.chipCornerRadius = 20F
-            } else {
-                chip.chipCornerRadius = 50F
+                chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(20F)
+            } else if (!b) {
+                chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(50F)
             }
         }
 
         binding.business.setOnCheckedChangeListener { _, b ->
             val chip = binding.business
             if (b) {
+                recyclerView.smoothScrollToPosition(0)
                 viewModel.getTopHeadlines("business")
-                chip.chipCornerRadius = 20F
+                chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(20F)
             } else {
-                chip.chipCornerRadius = 50F
+                chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(50F)
             }
         }
 
@@ -147,9 +184,10 @@ class HomeFragment: Fragment() {
             val chip = binding.Technology
             if (b) {
                 viewModel.getTopHeadlines("technology")
-                chip.chipCornerRadius = 20F
+                recyclerView.smoothScrollToPosition(0)
+                chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(20F)
             } else {
-                chip.chipCornerRadius = 50F
+                chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(50F)
             }
         }
 
@@ -157,9 +195,10 @@ class HomeFragment: Fragment() {
             val chip = binding.Sports
             if (b) {
                 viewModel.getTopHeadlines("sports")
-                chip.chipCornerRadius = 20F
+                recyclerView.smoothScrollToPosition(0)
+                chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(20F)
             } else {
-                chip.chipCornerRadius = 50F
+                chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(50F)
             }
         }
 
@@ -167,32 +206,12 @@ class HomeFragment: Fragment() {
             val chip = binding.Entertainment
             if (b) {
                 viewModel.getTopHeadlines("entertainment")
-                chip.chipCornerRadius = 20F
+                recyclerView.smoothScrollToPosition(0)
+                chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(20F)
             } else {
-                chip.chipCornerRadius = 50F
+                chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(50F)
             }
         }
-
-        val recyclerView = binding.recyclerviewNews
-
-        val newsAdapter = NewzyAdapter {
-            val action = it.url?.let { it1 ->
-                HomeFragmentDirections.actionHomeFragmentToWebpageDisplay(
-                    it1
-                )
-            }
-            if (action != null) {
-                this.findNavController().navigate(action)
-            }
-        }
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
-
-        viewModel.allArticles.observe(this.viewLifecycleOwner) { articles ->
-            articles.let {
-                newsAdapter.submitList(it)
-            }
-        }
-        recyclerView.adapter = newsAdapter
     }
 
     fun pageNavigator(filterData: FilterData,page: Int,query: String?,fromValue: String?, toValue: String?) {
@@ -267,4 +286,72 @@ class HomeFragment: Fragment() {
         binding.Sports.isChecked = false
         binding.Entertainment.isChecked = false
     }
+
+//    override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+//        menuInflater.inflate(R.menu.top_app_bar,menu)
+//        Log.v("checking", "..................")
+//    }
+//
+//    override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+//        val card = binding.bottomNavCard
+//        val cardHeight = card.height * 1.4
+//        val displayHeight = resources.displayMetrics.heightPixels
+//
+////        val searchviewItem =
+////        val searchView = searchviewItem.actionView as SearchView
+//
+//        return when (menuItem.itemId) {
+//
+//            R.id.search_bar -> {
+//                val searchView = menuItem.actionView as SearchView
+//                searchView.setOnQueryTextFocusChangeListener { _ , hasFocus ->
+//                    if (hasFocus) {
+//                        // searchView expanded
+//                        card.animate().y(displayHeight.toFloat() - cardHeight.toFloat())
+//                            .setDuration(0)
+//                            .start()
+//                    } else {
+//                        // searchView not expanded
+//                        card.animate().y(displayHeight.toFloat() + cardHeight.toFloat())
+//                            .setDuration(0)
+//                            .start()
+//                    }
+//                }
+//
+//                searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
+//                    override fun onQueryTextSubmit(query: String?): Boolean {
+//                        Log.v("new", "$query")
+//                        var fromValue: String? = null
+//                        if (filterData.from != null) {
+//                            fromValue = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(filterData.from)
+//                        }
+//                        val toValue: String? = null
+//                        if (filterData.to != null) {
+//                            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(filterData.to)
+//                        }
+//                        if (query != null) {
+//                            viewModel.getSearch(query,filterData.sliderCount,viewModel.page,fromValue,toValue,filterData.sortBy,filterData.language)
+//                        }
+//                        pageNavigator(filterData,viewModel.page,query,fromValue,toValue)
+//                        unCheckAll()
+//                        return false
+//                    }
+//
+//                    override fun onQueryTextChange(query: String?): Boolean {
+//                        return false
+//                    }
+//                })
+//
+//                true
+//            }
+//
+//            R.id.configure -> {
+//                val action = HomeFragmentDirections.actionHomeFragmentToFilterFragment()
+//                this.findNavController().navigate(action)
+//                true
+//            }
+//
+//            else -> false
+//        }
+//    }
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <color name="blue_200">#FF5294FF</color>
-    <color name="blue_500">#FF00218C</color>
+    <color name="blue_200">#FF6EB0FF</color>
+    <color name="beige_500">#FF00218C</color>
     <color name="gradient" tools:ignore="ReferenceType">@drawable/gradient_drawable</color>
     <color name="purple_700">#FF3700B3</color>
     <color name="teal_200">#FF03DAC5</color>

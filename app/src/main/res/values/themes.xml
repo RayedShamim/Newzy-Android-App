@@ -2,8 +2,8 @@
     <!-- Base application theme. -->
     <style name="Theme.Newzy" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/blue_500</item>
-        <item name="colorPrimaryVariant">@color/blue_200</item>
+        <item name="colorPrimary">@color/blue_200</item>
+        <item name="colorPrimaryVariant">@color/beige_500</item>
         <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/teal_200</item>
@@ -12,6 +12,17 @@
         <!-- Status bar color. -->
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
+        <item name="chipStyle">@style/Widget.MaterialComponents.Chip</item>
+    </style>
+
+    <style name="Widget.MaterialComponents.Chip" parent="Widget.MaterialComponents.Chip.Choice">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.Newzy.Chip</item>
+        <item name="overlay">@color/beige_500</item>
+    </style>
+
+    <style name="ThemeOverlay.Newzy.Chip" parent="">
+        <item name="colorPrimary">@color/beige_500</item>
+        <item name="colorOnSurface">@color/beige_500</item>
     </style>
 
 </resources>
