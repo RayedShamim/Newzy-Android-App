@@ -3,6 +3,7 @@
     <string name="search_bar">Search Bar</string>
     <string name="configure">Configure</string>
     <string name="search">Search</string>
+    <string name="source">"Source: "</string>
 
     <string-array name="language_names">
         <item>ar</item>
