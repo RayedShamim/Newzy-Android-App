@@ -18,8 +18,12 @@ class NewzyViewModel(private val filterDataDao: FilterDataDao): ViewModel() {
 
     val retrieveFilterData: LiveData<FilterData> = filterDataDao.getLatestFilterData().asLiveData()
 
-    var page = 1
+    private var _page = MutableLiveData(1)
+    val page:LiveData<Int> = _page
 
+    fun updatePage(page: Int) {
+        _page.value = page
+    }
 
     fun getSearch(searchTerm: String,pageSize: Int?,page: Int, from: String?, to: String?, sortBy: String?, language: String?) {
         viewModelScope.launch {

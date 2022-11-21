@@ -8,12 +8,15 @@ import android.view.ViewGroup
 import android.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.newzy.database.FilterData
 import com.example.newzy.databinding.HomeFragmentBinding
 import com.google.android.material.shape.ShapeAppearanceModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -66,6 +69,9 @@ class HomeFragment: Fragment(){
         card.animate().y(displayHeight.toFloat() + cardHeight.toFloat())
                     .setDuration(0)
                     .start()
+        viewModel.page.observe(this.viewLifecycleOwner) {
+            binding.button.text = it.toString()
+        }
 
         viewModel.allArticles.observe(this.viewLifecycleOwner) { articles ->
             articles.let {
@@ -98,12 +104,13 @@ class HomeFragment: Fragment(){
         searchView.setOnQueryTextFocusChangeListener { _ , hasFocus ->
             if (hasFocus) {
                 // searchView expanded
-                viewModel.page = 1
                 card.animate().y(displayHeight.toFloat() - cardHeight.toFloat())
                     .setDuration(0)
                     .start()
             } else {
                 // searchView not expanded
+                binding.topHeadline.isChecked = true
+                viewModel.updatePage(1)
                 card.animate().y(displayHeight.toFloat() + cardHeight.toFloat())
                     .setDuration(0)
                     .start()
@@ -128,13 +135,13 @@ class HomeFragment: Fragment(){
                 if (query != null) {
                     viewModel.getSearch(query,
                         filterData.sliderCount,
-                        viewModel.page,
+                        viewModel.page.value!!,
                         fromValue,
                         toValue,
                         filterData.sortBy,
                         filterData.language)
                 }
-                pageNavigator(filterData,viewModel.page,query,fromValue,toValue)
+                pageNavigator(filterData,viewModel.page.value!!,query,fromValue,toValue)
                 unCheckAll()
                 return false
             }
@@ -161,8 +168,10 @@ class HomeFragment: Fragment(){
         binding.topHeadline.setOnCheckedChangeListener { _, b ->
             val chip = binding.topHeadline
             if (b) {
-                recyclerView.smoothScrollToPosition(0)
                 viewModel.getTopHeadlines( "")
+                lifecycleScope.launch {
+                    scrollToTop()
+                }
                 chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(20F)
             } else if (!b) {
                 chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(50F)
@@ -172,8 +181,10 @@ class HomeFragment: Fragment(){
         binding.business.setOnCheckedChangeListener { _, b ->
             val chip = binding.business
             if (b) {
-                recyclerView.smoothScrollToPosition(0)
                 viewModel.getTopHeadlines("business")
+                lifecycleScope.launch {
+                    scrollToTop()
+                }
                 chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(20F)
             } else {
                 chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(50F)
@@ -184,7 +195,9 @@ class HomeFragment: Fragment(){
             val chip = binding.Technology
             if (b) {
                 viewModel.getTopHeadlines("technology")
-                recyclerView.smoothScrollToPosition(0)
+                lifecycleScope.launch {
+                    scrollToTop()
+                }
                 chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(20F)
             } else {
                 chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(50F)
@@ -195,7 +208,9 @@ class HomeFragment: Fragment(){
             val chip = binding.Sports
             if (b) {
                 viewModel.getTopHeadlines("sports")
-                recyclerView.smoothScrollToPosition(0)
+                lifecycleScope.launch {
+                    scrollToTop()
+                }
                 chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(20F)
             } else {
                 chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(50F)
@@ -206,12 +221,19 @@ class HomeFragment: Fragment(){
             val chip = binding.Entertainment
             if (b) {
                 viewModel.getTopHeadlines("entertainment")
-                recyclerView.smoothScrollToPosition(0)
+                lifecycleScope.launch {
+                    scrollToTop()
+                }
                 chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(20F)
             } else {
                 chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(50F)
             }
         }
+    }
+
+    suspend fun scrollToTop() {
+        delay(1000)
+        recyclerView.smoothScrollToPosition(0)
     }
 
     fun pageNavigator(filterData: FilterData,page: Int,query: String?,fromValue: String?, toValue: String?) {

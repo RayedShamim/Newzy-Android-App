@@ -15,6 +15,7 @@ class NewzyAdapter(val onItemClicked: (Articles) -> Unit): ListAdapter<Articles,
         fun bind(articles: Articles) {
             binding.title.text = articles.title
             binding.description.text = articles.description ?: "No Description"
+            binding.source.text = articles.source?.name
 
             val thumbnail = binding.imageView
             val imageUrl = articles.urlToImage
