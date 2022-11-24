@@ -63,12 +63,6 @@ class HomeFragment: Fragment(){
         }
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        val card = binding.bottomNavCard
-        val cardHeight = card.height * 1.4
-        val displayHeight = resources.displayMetrics.heightPixels
-        card.animate().y(displayHeight.toFloat() + cardHeight.toFloat())
-                    .setDuration(0)
-                    .start()
         viewModel.page.observe(this.viewLifecycleOwner) {
             binding.button.text = it.toString()
         }
@@ -93,55 +87,82 @@ class HomeFragment: Fragment(){
 
     private fun run() {
 
-        val card = binding.bottomNavCard
-        val cardHeight = card.height * 1.4
-        val displayHeight = resources.displayMetrics.heightPixels
-
-
         val searchItem = binding.appToolBar.menu.findItem(R.id.search_bar)
         val searchView = searchItem?.actionView as SearchView
+        val card = binding.bottomNavCard
+        val cardHeight = card.height * 1.4
+
+        viewModel.searchQuery.observe(this.viewLifecycleOwner) {
+            val from1 = filterData.from?.let {
+                SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    .format(it)
+            }
+            val to1 = filterData.to?.let {
+                SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    .format(it)
+            }
+            it?.let {
+                viewModel.getSearch(it,
+                    filterData.sliderCount,
+                    viewModel.page.value!!,
+                    from1,
+                    to1,
+                    filterData.sortBy,
+                    filterData.language)
+            }
+            pageNavigator(
+                filterData,
+                viewModel.page.value!!,
+                it,
+                from1,
+                to1
+            )
+        }
+
+        val displayHeight = resources.displayMetrics.heightPixels
+        Log.v("it","$displayHeight")
+        if (!searchView.isIconified) {
+            card.animate().y(displayHeight.toFloat() - 208.6f)
+                .setDuration(0)
+                .start()
+        } else {
+            card.animate().y(displayHeight.toFloat() + 208.6f)
+                .setDuration(0)
+                .start()
+        }
+        Log.v("it1","${card.y}")
 
         searchView.setOnQueryTextFocusChangeListener { _ , hasFocus ->
             if (hasFocus) {
                 // searchView expanded
-                card.animate().y(displayHeight.toFloat() - cardHeight.toFloat())
-                    .setDuration(0)
-                    .start()
+                if (card.y != displayHeight.toFloat() - 208.6f){
+                    card.animate().y(
+                        displayHeight.toFloat() - 208.6f
+                    )
+                        .setDuration(0)
+                        .start()
+                    Log.v("it2","${card.y}")
+                }
             } else {
                 // searchView not expanded
                 binding.topHeadline.isChecked = true
-                viewModel.updatePage(1)
-                card.animate().y(displayHeight.toFloat() + cardHeight.toFloat())
+                Log.v("it is the culprit","")
+                card.animate().y(
+                    displayHeight.toFloat() + 208.6f
+                )
                     .setDuration(0)
                     .start()
             }
         }
+
 
         searchView.queryHint = "Search News"
 
         searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 Log.v("new", "$query")
-                var fromValue: String? = null
-                if (filterData.from != null) {
-                    fromValue = SimpleDateFormat("yyyy-MM-dd",
-                        Locale.getDefault()).format(filterData.from)
-                }
-                val toValue: String? = null
-                if (filterData.to != null) {
-                    SimpleDateFormat("yyyy-MM-dd",
-                        Locale.getDefault()).format(filterData.to)
-                }
-                if (query != null) {
-                    viewModel.getSearch(query,
-                        filterData.sliderCount,
-                        viewModel.page.value!!,
-                        fromValue,
-                        toValue,
-                        filterData.sortBy,
-                        filterData.language)
-                }
-                pageNavigator(filterData,viewModel.page.value!!,query,fromValue,toValue)
+                viewModel.updateSearchQuery(query)
+                viewModel.updatePage(1)
                 unCheckAll()
                 return false
             }
@@ -159,9 +180,16 @@ class HomeFragment: Fragment(){
             true
         }
 
-        viewModel.country.observe(this.viewLifecycleOwner) {
-            viewModel.getTopHeadlines("")
-            binding.topHeadline.isChecked = true
+//        if (viewModel.allArticles.value.isNullOrEmpty()) {
+//            viewModel.getTopHeadlines("")
+//        }
+
+        if (viewModel.country.value == null){
+            viewModel.country.observe(this.viewLifecycleOwner) {
+                Log.v("checking", "checking again")
+                viewModel.getTopHeadlines("")
+                binding.topHeadline.isChecked = true
+            }
         }
 
         binding.topHeadline.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(20F)
@@ -242,7 +270,7 @@ class HomeFragment: Fragment(){
             binding.backButton.setOnClickListener {
                 if (pageValue > 1) {
                     pageValue--
-                    binding.button.text = pageValue.toString()
+                    viewModel.updatePage(pageValue)
                     viewModel.getSearch(
                         query,
                         filterData.sliderCount,
@@ -257,7 +285,7 @@ class HomeFragment: Fragment(){
 
             binding.forwardButton.setOnClickListener {
                 pageValue++
-                binding.button.text = pageValue.toString()
+                viewModel.updatePage(pageValue)
                 viewModel.getSearch(
                     query,
                     filterData.sliderCount,
@@ -272,7 +300,7 @@ class HomeFragment: Fragment(){
             binding.doubleBack.setOnClickListener {
                 if (pageValue > 5) {
                     pageValue -= 5
-                    binding.button.text = pageValue.toString()
+                    viewModel.updatePage(pageValue)
                     viewModel.getSearch(
                         query,
                         filterData.sliderCount,
@@ -287,7 +315,7 @@ class HomeFragment: Fragment(){
 
             binding.doubleForwardButton.setOnClickListener {
                 pageValue += 5
-                binding.button.text = pageValue.toString()
+                viewModel.updatePage(pageValue)
                 viewModel.getSearch(
                     query,
                     filterData.sliderCount,
@@ -308,72 +336,4 @@ class HomeFragment: Fragment(){
         binding.Sports.isChecked = false
         binding.Entertainment.isChecked = false
     }
-
-//    override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-//        menuInflater.inflate(R.menu.top_app_bar,menu)
-//        Log.v("checking", "..................")
-//    }
-//
-//    override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-//        val card = binding.bottomNavCard
-//        val cardHeight = card.height * 1.4
-//        val displayHeight = resources.displayMetrics.heightPixels
-//
-////        val searchviewItem =
-////        val searchView = searchviewItem.actionView as SearchView
-//
-//        return when (menuItem.itemId) {
-//
-//            R.id.search_bar -> {
-//                val searchView = menuItem.actionView as SearchView
-//                searchView.setOnQueryTextFocusChangeListener { _ , hasFocus ->
-//                    if (hasFocus) {
-//                        // searchView expanded
-//                        card.animate().y(displayHeight.toFloat() - cardHeight.toFloat())
-//                            .setDuration(0)
-//                            .start()
-//                    } else {
-//                        // searchView not expanded
-//                        card.animate().y(displayHeight.toFloat() + cardHeight.toFloat())
-//                            .setDuration(0)
-//                            .start()
-//                    }
-//                }
-//
-//                searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
-//                    override fun onQueryTextSubmit(query: String?): Boolean {
-//                        Log.v("new", "$query")
-//                        var fromValue: String? = null
-//                        if (filterData.from != null) {
-//                            fromValue = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(filterData.from)
-//                        }
-//                        val toValue: String? = null
-//                        if (filterData.to != null) {
-//                            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(filterData.to)
-//                        }
-//                        if (query != null) {
-//                            viewModel.getSearch(query,filterData.sliderCount,viewModel.page,fromValue,toValue,filterData.sortBy,filterData.language)
-//                        }
-//                        pageNavigator(filterData,viewModel.page,query,fromValue,toValue)
-//                        unCheckAll()
-//                        return false
-//                    }
-//
-//                    override fun onQueryTextChange(query: String?): Boolean {
-//                        return false
-//                    }
-//                })
-//
-//                true
-//            }
-//
-//            R.id.configure -> {
-//                val action = HomeFragmentDirections.actionHomeFragmentToFilterFragment()
-//                this.findNavController().navigate(action)
-//                true
-//            }
-//
-//            else -> false
-//        }
-//    }
 }

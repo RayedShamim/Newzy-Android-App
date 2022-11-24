@@ -21,7 +21,15 @@ class NewzyViewModel(private val filterDataDao: FilterDataDao): ViewModel() {
     private var _page = MutableLiveData(1)
     val page:LiveData<Int> = _page
 
+    private var _searchQuery = MutableLiveData<String?>()
+    val searchQuery: LiveData<String?> = _searchQuery
+
+    fun updateSearchQuery(searchTerm: String?) {
+        _searchQuery.value = searchTerm
+    }
+
     fun updatePage(page: Int) {
+        Log.v("it rannnn","")
         _page.value = page
     }
 
