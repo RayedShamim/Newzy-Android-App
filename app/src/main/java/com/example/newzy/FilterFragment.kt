@@ -191,22 +191,12 @@ class FilterFragment: androidx.fragment.app.Fragment() {
 
         spinnerCountry.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-                if (oldCountry != null) {
-                    val newCountry = CountryNewzy(
-                        id = oldCountry.id,
-                        name = CountriesList.country[p2].name,
-                        code = CountriesList.country[p2].code
-                    )
-                    viewModel.updateCountry(newCountry)
-                } else {
-                    val newCountry = CountryNewzy(
-                        id = null,
-                        name = CountriesList.country[p2].name,
-                        code = CountriesList.country[p2].code
-                    )
-                    viewModel.insertCountry(newCountry)
-                }
-
+                val newCountry = CountryNewzy(
+                    id = oldCountry?.id,
+                    name = CountriesList.country[p2].name,
+                    code = CountriesList.country[p2].code
+                )
+                viewModel.updateCountry(newCountry)
             }
 
             override fun onNothingSelected(p0: AdapterView<*>?) {

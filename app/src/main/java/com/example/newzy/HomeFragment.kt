@@ -12,8 +12,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.newzy.database.CountryNewzy
 import com.example.newzy.database.FilterData
 import com.example.newzy.databinding.HomeFragmentBinding
+import com.example.newzy.model.CountriesList
 import com.google.android.material.shape.ShapeAppearanceModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -33,6 +35,7 @@ class HomeFragment: Fragment(){
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var filterData: FilterData
+    private lateinit var country: CountryNewzy
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,6 +51,17 @@ class HomeFragment: Fragment(){
 
         binding.appToolBar.apply {
             setLogo(R.drawable.newzy_logo_full_2_01)
+        }
+
+        //Observing the class property country. This will be used to display top headlines based on this variable.
+        viewModel.country.observe(this.viewLifecycleOwner) {
+            if (it == null) {
+                val newCountry = CountriesList.country[50]
+                val entryCountry = CountryNewzy(null,newCountry.name,newCountry.code)
+                viewModel.insertCountry(entryCountry)
+            } else {
+                country = it
+            }
         }
 
         recyclerView = binding.recyclerviewNews
@@ -66,7 +80,7 @@ class HomeFragment: Fragment(){
         viewModel.page.observe(this.viewLifecycleOwner) {
             binding.button.text = it.toString()
         }
-
+        //Updates the recyclerView with new articles.
         viewModel.allArticles.observe(this.viewLifecycleOwner) { articles ->
             articles.let {
                 newsAdapter.submitList(it)
@@ -90,7 +104,13 @@ class HomeFragment: Fragment(){
         val searchItem = binding.appToolBar.menu.findItem(R.id.search_bar)
         val searchView = searchItem?.actionView as SearchView
         val card = binding.bottomNavCard
-        val cardHeight = card.height * 1.4
+        val cardUp = resources.displayMetrics.heightPixels.toFloat() - card.height.toFloat()
+        val cardDown = resources.displayMetrics.heightPixels.toFloat() + card.height.toFloat()
+
+        if (cardUp != resources.displayMetrics.heightPixels.toFloat()) {
+            viewModel.cardUpValue = cardUp
+            viewModel.cardDownValue = cardDown
+        }
 
         viewModel.searchQuery.observe(this.viewLifecycleOwner) {
             val from1 = filterData.from?.let {
@@ -122,11 +142,12 @@ class HomeFragment: Fragment(){
         val displayHeight = resources.displayMetrics.heightPixels
         Log.v("it","$displayHeight")
         if (!searchView.isIconified) {
-            card.animate().y(displayHeight.toFloat() - 208.6f)
+            card.animate().y(viewModel.cardUpValue)
                 .setDuration(0)
                 .start()
         } else {
-            card.animate().y(displayHeight.toFloat() + 208.6f)
+            viewModel.getTopHeadlines("")
+            card.animate().y(viewModel.cardDownValue)
                 .setDuration(0)
                 .start()
         }
@@ -135,9 +156,9 @@ class HomeFragment: Fragment(){
         searchView.setOnQueryTextFocusChangeListener { _ , hasFocus ->
             if (hasFocus) {
                 // searchView expanded
-                if (card.y != displayHeight.toFloat() - 208.6f){
+                if (card.y != viewModel.cardUpValue){
                     card.animate().y(
-                        displayHeight.toFloat() - 208.6f
+                        viewModel.cardUpValue
                     )
                         .setDuration(0)
                         .start()
@@ -145,10 +166,11 @@ class HomeFragment: Fragment(){
                 }
             } else {
                 // searchView not expanded
+                viewModel.getTopHeadlines("")
                 binding.topHeadline.isChecked = true
                 Log.v("it is the culprit","")
                 card.animate().y(
-                    displayHeight.toFloat() + 208.6f
+                    viewModel.cardDownValue
                 )
                     .setDuration(0)
                     .start()
@@ -167,6 +189,7 @@ class HomeFragment: Fragment(){
                 return false
             }
 
+
             override fun onQueryTextChange(query: String?): Boolean {
                 return false
             }
@@ -180,17 +203,7 @@ class HomeFragment: Fragment(){
             true
         }
 
-//        if (viewModel.allArticles.value.isNullOrEmpty()) {
-//            viewModel.getTopHeadlines("")
-//        }
-
-        if (viewModel.country.value == null){
-            viewModel.country.observe(this.viewLifecycleOwner) {
-                Log.v("checking", "checking again")
-                viewModel.getTopHeadlines("")
-                binding.topHeadline.isChecked = true
-            }
-        }
+        //..........................................................................................
 
         binding.topHeadline.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(20F)
         binding.topHeadline.setOnCheckedChangeListener { _, b ->

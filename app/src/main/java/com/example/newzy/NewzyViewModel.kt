@@ -24,6 +24,10 @@ class NewzyViewModel(private val filterDataDao: FilterDataDao): ViewModel() {
     private var _searchQuery = MutableLiveData<String?>()
     val searchQuery: LiveData<String?> = _searchQuery
 
+    var cardUpValue: Float = 0f
+
+    var cardDownValue: Float = 0f
+
     fun updateSearchQuery(searchTerm: String?) {
         _searchQuery.value = searchTerm
     }
@@ -49,9 +53,8 @@ class NewzyViewModel(private val filterDataDao: FilterDataDao): ViewModel() {
     fun getTopHeadlines(category: String) {
         viewModelScope.launch {
             try {
-                val obj =
-                    NewsApi.retrofitService.getTopHeadlines(country.value!!.code,category)
-                    _allArticles.value = obj.articles
+                val obj = NewsApi.retrofitService.getTopHeadlines(country.value!!.code,category)
+                _allArticles.value = obj.articles
 
             } catch (e: Exception) {
                 Log.v("error top headlines", "$e")
@@ -154,7 +157,7 @@ class NewzyViewModel(private val filterDataDao: FilterDataDao): ViewModel() {
             from = null,
             to = null,
             sortBy = null,
-            language = null
+            language = "en"
         )
         viewModelScope.launch {
             filterDataDao.insertFilterData(newData)
