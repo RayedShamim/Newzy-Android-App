@@ -104,8 +104,11 @@ class HomeFragment: Fragment(){
         val searchItem = binding.appToolBar.menu.findItem(R.id.search_bar)
         val searchView = searchItem?.actionView as SearchView
         val card = binding.bottomNavCard
-        val cardUp = resources.displayMetrics.heightPixels.toFloat() - card.height.toFloat()
-        val cardDown = resources.displayMetrics.heightPixels.toFloat() + card.height.toFloat()
+        if (card.height.toFloat() != 0f) {
+            viewModel.cardheight = card.height.toFloat()
+        }
+        val cardUp = resources.displayMetrics.heightPixels.toFloat() - viewModel.cardheight
+        val cardDown = resources.displayMetrics.heightPixels.toFloat() + viewModel.cardheight
 
         if (cardUp != resources.displayMetrics.heightPixels.toFloat()) {
             viewModel.cardUpValue = cardUp

@@ -25,7 +25,7 @@ class NewzyViewModel(private val filterDataDao: FilterDataDao): ViewModel() {
     val searchQuery: LiveData<String?> = _searchQuery
 
     var cardUpValue: Float = 0f
-
+    var cardheight: Float = 0f
     var cardDownValue: Float = 0f
 
     fun updateSearchQuery(searchTerm: String?) {
