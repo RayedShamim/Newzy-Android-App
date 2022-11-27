@@ -61,6 +61,31 @@ class HomeFragment: Fragment(){
                 viewModel.insertCountry(entryCountry)
             } else {
                 country = it
+                val searchItem = binding.appToolBar.menu.findItem(R.id.search_bar)
+                val searchView = searchItem?.actionView as SearchView
+                val card = binding.bottomNavCard
+
+                if (card.height.toFloat() != 0f) {
+                    viewModel.cardheight = card.height.toFloat()
+                }
+                val cardUp = resources.displayMetrics.heightPixels.toFloat() - viewModel.cardheight
+                val cardDown = resources.displayMetrics.heightPixels.toFloat() + viewModel.cardheight
+
+                if (cardUp != resources.displayMetrics.heightPixels.toFloat()) {
+                    viewModel.cardUpValue = cardUp
+                    viewModel.cardDownValue = cardDown
+                }
+
+                if (!searchView.isIconified) {
+                    card.animate().y(viewModel.cardUpValue)
+                        .setDuration(0)
+                        .start()
+                } else {
+                    viewModel.getTopHeadlines("",it)
+                    card.animate().y(viewModel.cardDownValue)
+                        .setDuration(0)
+                        .start()
+                }
             }
         }
 
@@ -100,22 +125,11 @@ class HomeFragment: Fragment(){
     }
 
     private fun run() {
-
         val searchItem = binding.appToolBar.menu.findItem(R.id.search_bar)
         val searchView = searchItem?.actionView as SearchView
         val card = binding.bottomNavCard
-        if (card.height.toFloat() != 0f) {
-            viewModel.cardheight = card.height.toFloat()
-        }
-        val cardUp = resources.displayMetrics.heightPixels.toFloat() - viewModel.cardheight
-        val cardDown = resources.displayMetrics.heightPixels.toFloat() + viewModel.cardheight
 
-        if (cardUp != resources.displayMetrics.heightPixels.toFloat()) {
-            viewModel.cardUpValue = cardUp
-            viewModel.cardDownValue = cardDown
-        }
-
-        viewModel.searchQuery.observe(this.viewLifecycleOwner) {
+        viewModel.searchQuery.observe(this.viewLifecycleOwner) { query ->
             val from1 = filterData.from?.let {
                 SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                     .format(it)
@@ -124,7 +138,7 @@ class HomeFragment: Fragment(){
                 SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                     .format(it)
             }
-            it?.let {
+            query?.let {
                 viewModel.getSearch(it,
                     filterData.sliderCount,
                     viewModel.page.value!!,
@@ -136,24 +150,14 @@ class HomeFragment: Fragment(){
             pageNavigator(
                 filterData,
                 viewModel.page.value!!,
-                it,
+                query,
                 from1,
                 to1
             )
         }
 
         val displayHeight = resources.displayMetrics.heightPixels
-        Log.v("it","$displayHeight")
-        if (!searchView.isIconified) {
-            card.animate().y(viewModel.cardUpValue)
-                .setDuration(0)
-                .start()
-        } else {
-            viewModel.getTopHeadlines("")
-            card.animate().y(viewModel.cardDownValue)
-                .setDuration(0)
-                .start()
-        }
+        Log.v("it","$displayHeight")//.....................................................
         Log.v("it1","${card.y}")
 
         searchView.setOnQueryTextFocusChangeListener { _ , hasFocus ->
@@ -169,7 +173,7 @@ class HomeFragment: Fragment(){
                 }
             } else {
                 // searchView not expanded
-                viewModel.getTopHeadlines("")
+                viewModel.getTopHeadlines("",country)
                 binding.topHeadline.isChecked = true
                 Log.v("it is the culprit","")
                 card.animate().y(
@@ -212,7 +216,7 @@ class HomeFragment: Fragment(){
         binding.topHeadline.setOnCheckedChangeListener { _, b ->
             val chip = binding.topHeadline
             if (b) {
-                viewModel.getTopHeadlines( "")
+                viewModel.getTopHeadlines( "",country)
                 lifecycleScope.launch {
                     scrollToTop()
                 }
@@ -225,7 +229,7 @@ class HomeFragment: Fragment(){
         binding.business.setOnCheckedChangeListener { _, b ->
             val chip = binding.business
             if (b) {
-                viewModel.getTopHeadlines("business")
+                viewModel.getTopHeadlines("business",country)
                 lifecycleScope.launch {
                     scrollToTop()
                 }
@@ -238,7 +242,7 @@ class HomeFragment: Fragment(){
         binding.Technology.setOnCheckedChangeListener { _, b ->
             val chip = binding.Technology
             if (b) {
-                viewModel.getTopHeadlines("technology")
+                viewModel.getTopHeadlines("technology",country)
                 lifecycleScope.launch {
                     scrollToTop()
                 }
@@ -251,7 +255,7 @@ class HomeFragment: Fragment(){
         binding.Sports.setOnCheckedChangeListener { _, b ->
             val chip = binding.Sports
             if (b) {
-                viewModel.getTopHeadlines("sports")
+                viewModel.getTopHeadlines("sports",country)
                 lifecycleScope.launch {
                     scrollToTop()
                 }
@@ -264,7 +268,7 @@ class HomeFragment: Fragment(){
         binding.Entertainment.setOnCheckedChangeListener { _, b ->
             val chip = binding.Entertainment
             if (b) {
-                viewModel.getTopHeadlines("entertainment")
+                viewModel.getTopHeadlines("entertainment",country)
                 lifecycleScope.launch {
                     scrollToTop()
                 }
@@ -275,12 +279,12 @@ class HomeFragment: Fragment(){
         }
     }
 
-    suspend fun scrollToTop() {
+    private suspend fun scrollToTop() {
         delay(1000)
         recyclerView.smoothScrollToPosition(0)
     }
 
-    fun pageNavigator(filterData: FilterData,page: Int,query: String?,fromValue: String?, toValue: String?) {
+    private fun pageNavigator(filterData: FilterData, page: Int, query: String?, fromValue: String?, toValue: String?) {
         var pageValue = page
         if (query != null) {
             binding.backButton.setOnClickListener {

@@ -50,10 +50,10 @@ class NewzyViewModel(private val filterDataDao: FilterDataDao): ViewModel() {
         }
     }
 
-    fun getTopHeadlines(category: String) {
+    fun getTopHeadlines(category: String,country: CountryNewzy) {
         viewModelScope.launch {
             try {
-                val obj = NewsApi.retrofitService.getTopHeadlines(country.value!!.code,category)
+                val obj = NewsApi.retrofitService.getTopHeadlines(country.code,category)
                 _allArticles.value = obj.articles
 
             } catch (e: Exception) {
