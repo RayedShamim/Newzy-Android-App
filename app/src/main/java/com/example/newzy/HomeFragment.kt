@@ -300,26 +300,31 @@ class HomeFragment: Fragment(){
                         filterData.sortBy,
                         filterData.language
                     )
+
                 }
             }
 
             binding.forwardButton.setOnClickListener {
-                pageValue++
-                viewModel.updatePage(pageValue)
-                viewModel.getSearch(
-                    query,
-                    filterData.sliderCount,
-                    pageValue,
-                    fromValue,
-                    toValue,
-                    filterData.sortBy,
-                    filterData.language
-                )
+                if (pageValue < 5){
+                    pageValue++
+                    viewModel.updatePage(pageValue)
+                    viewModel.getSearch(
+                        query,
+                        filterData.sliderCount,
+                        pageValue,
+                        fromValue,
+                        toValue,
+                        filterData.sortBy,
+                        filterData.language
+                    )
+                }
+                Log.v("search result","${viewModel.allArticles.value}")
             }
 
             binding.doubleBack.setOnClickListener {
-                if (pageValue > 5) {
-                    pageValue -= 5
+                if (pageValue > 1) {
+                    val difference = pageValue - 1
+                    pageValue -= difference
                     viewModel.updatePage(pageValue)
                     viewModel.getSearch(
                         query,
@@ -334,17 +339,20 @@ class HomeFragment: Fragment(){
             }
 
             binding.doubleForwardButton.setOnClickListener {
-                pageValue += 5
-                viewModel.updatePage(pageValue)
-                viewModel.getSearch(
-                    query,
-                    filterData.sliderCount,
-                    pageValue,
-                    fromValue,
-                    toValue,
-                    filterData.sortBy,
-                    filterData.language
-                )
+                if (pageValue < 5) {
+                    val difference = 5 - pageValue
+                    pageValue += difference
+                    viewModel.updatePage(pageValue)
+                    viewModel.getSearch(
+                        query,
+                        filterData.sliderCount,
+                        pageValue,
+                        fromValue,
+                        toValue,
+                        filterData.sortBy,
+                        filterData.language
+                    )
+                }
             }
         }
     }
