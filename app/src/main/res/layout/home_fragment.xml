@@ -9,6 +9,9 @@
         <variable
             name="homeFragemnt"
             type="com.example.newzy.HomeFragment" />
+        <variable
+            name="viewModel"
+            type="com.example.newzy.NewzyViewModel" />
     </data>
 
 <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -39,6 +42,20 @@
         android:clipToPadding="true"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         />
+
+    <ProgressBar
+        android:id="@+id/loading_animation"
+        android:layout_gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:apiLoadingStatus="@{viewModel.status}"/>
+
+    <ImageView
+        android:id="@+id/connection_error"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        app:newsApiStatus="@{viewModel.status}" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/bottom_nav_card"

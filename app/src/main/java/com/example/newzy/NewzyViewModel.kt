@@ -9,6 +9,8 @@ import com.example.newzy.network.Articles
 import com.example.newzy.network.NewsApi
 import kotlinx.coroutines.launch
 
+enum class NewsApiStatus { LOADING, DONE, ERROR }
+
 class NewzyViewModel(private val filterDataDao: FilterDataDao): ViewModel() {
 
     private val _allArticles = MutableLiveData<List<Articles>>()
@@ -21,12 +23,19 @@ class NewzyViewModel(private val filterDataDao: FilterDataDao): ViewModel() {
     private var _page = MutableLiveData(1)
     val page:LiveData<Int> = _page
 
+    private val _status = MutableLiveData<NewsApiStatus>()
+    val status: LiveData<NewsApiStatus> = _status
+
     private var _searchQuery = MutableLiveData<String?>()
     val searchQuery: LiveData<String?> = _searchQuery
 
     var cardUpValue: Float = 0f
     var cardheight: Float = 0f
     var cardDownValue: Float = 0f
+
+    init {
+        country.value?.let { getTopHeadlines("", it) }
+    }
 
     fun updateSearchQuery(searchTerm: String?) {
         _searchQuery.value = searchTerm
@@ -39,12 +48,16 @@ class NewzyViewModel(private val filterDataDao: FilterDataDao): ViewModel() {
 
     fun getSearch(searchTerm: String,pageSize: Int?,page: Int, from: String?, to: String?, sortBy: String?, language: String?) {
         viewModelScope.launch {
+            _status.value = NewsApiStatus.LOADING
             try {
                 Log.v("Starting","hello there")
                 val obj = NewsApi.retrofitService.getNews(searchTerm,pageSize,page,sortBy,from, to, language)
                 _allArticles.value = obj.articles
-                Log.v("checking","Done")
+                _status.value = NewsApiStatus.DONE
+                Log.v("checking","${status.value}")
             } catch (e: Exception) {
+                _status.value = NewsApiStatus.ERROR
+                _allArticles.value = listOf()
                 Log.v("error search","$e")
             }
         }
@@ -52,12 +65,17 @@ class NewzyViewModel(private val filterDataDao: FilterDataDao): ViewModel() {
 
     fun getTopHeadlines(category: String,country: CountryNewzy) {
         viewModelScope.launch {
+            _status.value = NewsApiStatus.LOADING
             try {
                 val obj = NewsApi.retrofitService.getTopHeadlines(country.code,category)
                 _allArticles.value = obj.articles
-
+                _status.value = NewsApiStatus.DONE
+                Log.v("checking","${status.value}")
             } catch (e: Exception) {
+                _status.value = NewsApiStatus.ERROR
+                _allArticles.value = listOf()
                 Log.v("error top headlines", "$e")
+                Log.v("checking","${status.value}")
             }
         }
     }

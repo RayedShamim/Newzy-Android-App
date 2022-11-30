@@ -49,6 +49,9 @@ class HomeFragment: Fragment(){
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.viewModel = viewModel
+        binding.lifecycleOwner = this
+
         binding.appToolBar.apply {
             setLogo(R.drawable.newzy_logo_full_2_01)
         }
